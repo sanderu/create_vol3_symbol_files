@@ -15,11 +15,12 @@ Kernel-version:
 * output of "uname -r", ex. 5.10.0-20-amd64
 
 ### Examples:
+
+Create symbol files for Debian kernel version 5.10.0-20-amd64:
 ~~~
 ./create_vol3_symbol_files.sh -d debian -k 5.10.0-20-amd64
 ~~~
-Create symbol files for Debian kernel version 5.10.0-20-amd64
+Create symbol files for all Debian kernels:
 ~~~
 ./create_vol3_symbol_files.sh -d debian -a
 ~~~
-Create symbol files for all debian kernels.
