@@ -22,6 +22,18 @@ _sanity_checks() {
     if [ ! -d ${SYMBOL_DIR} ]; then
         mkdir ${SYMBOL_DIR}
     fi
+
+    if [ $( which ar ) -eq 1 ) ]; then
+        echo 'You need to install the "binutils" package. Run: sudo apt -y install binutils'
+        echo 'Then rerun script.'
+        exit 1
+    fi
+
+    if [ $( which unxz ) -eq 1 ]; then
+        echo 'You need to install the "xz-utils" package. Run: sudo apt -y install xz-utils'
+        echo 'Then rerun script.'
+        exit 1
+    fi
 }
 
 _get_download_page() {
@@ -76,7 +88,7 @@ _show_usage() {
 ##################
 ## MAIN PROGRAM ##
 ##################
-#sanity_checks
+_sanity_checks
 while getopts "d:k:a" ARGUMENT; do
     case "${ARGUMENT}" in
         d)
