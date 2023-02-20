@@ -46,6 +46,7 @@ _handle_deb() {
         grep -A15 linux_banner ${TEMP_DIR}/${KERN_VAR}_${ARCH}.json | grep constant_data | awk -F '"' '{print $4}' | base64 -d > ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/${FULL_NAME}_banner.txt
         xz ${TEMP_DIR}/${KERN_VAR}_${ARCH}.json 
         mv ${TEMP_DIR}/${KERN_VAR}_${ARCH}.json.xz ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/${KERN_VAR}_${ARCH}.json.xz
+        rm ${TEMP_DIR}/${FULL_NAME}
     else
         echo "Unable to create symbol-file as data.tar.xz is missing after unpacking: ${FULL_NAME}"
         exit 1
