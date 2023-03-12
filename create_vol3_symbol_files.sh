@@ -24,13 +24,25 @@ _sanity_checks() {
     fi
 
     if [ $( which ar | echo $? ) -eq 1 ) ]; then
-        echo 'You need to install the "binutils" package. Run: sudo apt -y install binutils'
+        echo '"ar" command missing and needs to be installed for script to work.'
+        echo 'For DEB-based systems - install the "binutils" package. Run: sudo apt -y install binutils'
+        echo 'For RPM-based systems - install the "unar" package. Run: sudo yum -y install unar'
         echo 'Then rerun script.'
         exit 1
     fi
 
     if [ $( which unxz | echo $? ) -eq 1 ]; then
-        echo 'You need to install the "xz-utils" package. Run: sudo apt -y install xz-utils'
+        echo '"unxz" command missing and needs to be installed for script to work.'
+        echo 'For DEB-based systems - install the "xz-utils" package. Run: sudo apt -y install xz-utils'
+        echo 'For RPM-based systems - install the "xz" package. Run: sudo yum -y install xz'
+        echo 'Then rerun script.'
+        exit 1
+    fi
+
+    if [ $( which rpm2cpio | echo $? ) -eq 1 ]; then
+        echo '"rpm2cpio" command missing and needs to be installed for script to work.'
+        echo 'For DEB-based systems - install the "rpm2cpio" package. Run: sudo apt -y install rpm2cpio'
+        echo 'For RPM-based systems - re-install the "rpm" package. Run: sudo yum -y install rpm'
         echo 'Then rerun script.'
         exit 1
     fi
@@ -56,6 +68,10 @@ _distrocheck() {
             DOWNLOAD_SITE='http://ddebs.ubuntu.com/ubuntu/pool/main/l/'
             DISTRO='ubuntu'
             ;;
+        fedora)
+            DOWNLOAD_SITE='https://copr.fedorainfracloud.org/coprs/g/kernel-vanilla/fedora/'
+            DISTRO='fedora'
+            ;;
         *)
             echo "${DIST} is unknown/not supported - bug-report with links to package repo etc."
             exit 1
@@ -79,7 +95,7 @@ _show_usage() {
     echo 'Usage for creating symbol files:'
     echo "${PROGRAMNAME} [-d <distro>] [-k <kernel-version>]|[-a]"
     echo 'kernel-version = output of "uname -r" ex. 5.10.0-20-amd64'
-    echo '-d <distro>           - Distro: debian, ubuntu'
+    echo '-d <distro>           - Distro: debian, ubuntu, fedora'
     echo '-k <kernel-version>   - Creating symbol file for kernel version given if it exists'
     echo '-a                    - Create symbol files for all kernel versions'
     exit 1
