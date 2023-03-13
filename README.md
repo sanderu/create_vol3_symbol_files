@@ -5,9 +5,10 @@ Script for creating Volatility3 symbol files
 ~~~
 ./create_vol3_symbol_files.sh -d <distro> -k <kernel-version>|-a
 ~~~
-Distro supported:
+Distros supported:
 * debian
 * ubuntu
+* fedora
 
 Choose to create Volatility3 symbol files for specific kernel or all (-a).
 
