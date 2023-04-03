@@ -23,7 +23,7 @@ _sanity_checks() {
         mkdir ${SYMBOL_DIR}
     fi
 
-    if [ $( which ar | echo $? ) -eq 1 ) ]; then
+    if [ $( which ar | echo $? ) -eq 1 ]; then
         echo '"ar" command missing and needs to be installed for script to work.'
         echo 'For DEB-based systems - install the "binutils" package. Run: sudo apt -y install binutils'
         echo 'For RPM-based systems - install the "unar" package. Run: sudo yum -y install unar'
@@ -72,6 +72,10 @@ _distrocheck() {
             DOWNLOAD_SITE='https://copr.fedorainfracloud.org/coprs/g/kernel-vanilla/fedora/'
             DISTRO='fedora'
             ;;
+        rocky)
+            DOWNLOAD_SITE='https://download.rockylinux.org/pub/rocky/'
+            DISTRO='rocky'
+            ;;
         *)
             echo "${DIST} is unknown/not supported - bug-report with links to package repo etc."
             exit 1
@@ -95,7 +99,7 @@ _show_usage() {
     echo 'Usage for creating symbol files:'
     echo "${PROGRAMNAME} [-d <distro>] [-k <kernel-version>]|[-a]"
     echo 'kernel-version = output of "uname -r" ex. 5.10.0-20-amd64'
-    echo '-d <distro>           - Distro: debian, ubuntu, fedora'
+    echo '-d <distro>           - Distro: debian, ubuntu, fedora, rocky'
     echo '-k <kernel-version>   - Creating symbol file for kernel version given if it exists'
     echo '-a                    - Create symbol files for all kernel versions'
     exit 1
