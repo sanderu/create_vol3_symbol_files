@@ -46,11 +46,10 @@ _handle_rpm() {
         exit 1
     fi
 
-    # Create banner.txt file
-    grep -A15 linux_banner ${TEMP_DIR}/${KERN_VAR}.json | grep constant_data | awk -F '"' '{print $4}' | base64 -d > ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/banner.txt
+    # Create banner.txt file - NOPE! not for Rocky Linux - constant_data not present in json file
     xz ${TEMP_DIR}/${KERN_VAR}.json
     mv ${TEMP_DIR}/${KERN_VAR}.json.xz ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/${KERN_VAR}.json.xz
-    rm ${TEMP_DIR}/${FULL_NAME}
+    rm ${TEMP_DIR}/${PKG_NAME}
 }
 
 _single_kernel() {
@@ -64,8 +63,14 @@ _single_kernel() {
         DISTRO_VERS=${CHECK_DISTRO_VERS}
     fi
     KERN_NAME=$( echo 'kernel-debug-core-'${KERN_VAR}'.rpm' )
-    FULL_NAME="${DISTRO_VERS}/BaseOS/${KERN_ARCH}/os/Packages/k/${KERN_NAME}"
-
+    for DL_SITE in ${DOWNLOAD_SITE} https://dl.rockylinux.org/vault/rocky/ ; do
+        if [ ! $( wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/Packages/k -O ${TEMP_DIR}/index3.html ) ]; then
+            FULL_NAME="${DISTRO_VERS}/BaseOS/${KERN_ARCH}/os/Packages/${KERN_NAME}"
+        else
+            FULL_NAME="${DISTRO_VERS}/BaseOS/${KERN_ARCH}/os/Packages/k/${KERN_NAME}"
+        fi
+    done
+    DOWNLOAD_SITE=${DL_SITE}
     _handle_rpm ${KERN_VAR} ${FULL_NAME}
 
     echo "Finished creating symbol-file for ${KERN_VAR}."
@@ -73,18 +78,27 @@ _single_kernel() {
 }
 
 _all_kernels() {
+    # DOWNLOAD_SITE
+    # https://dl.rockylinux.org/vault/rocky/9.0/BaseOS/
     # Create symbol-files for all kernels
-    for VERSION in $( grep ' -' ${TEMP_DIR}/index.html | awk -F 'href="' '{print $2}' | awk -F '/">' '{print $1}' | sed -e 's/ /-/g' | tr '\n' ' ' ); do
-        for ARCH in x86_64 aarch64 ppc64le s390x; do
-            # https://download.rockylinux.org/pub/rocky/9.1/BaseOS/ppc64le/os/Packages/k
-            wget ${DOWNLOAD_SITE}/${VERSION}/BaseOS/${ARCH}/os/Packages/k -O /tmp/index2.html 
-            if [[ -z $( cat /tmp/index2.html ) ]]; then
-                break
-            fi
-            for KERN in $( grep 'kernel-debug-core-' /tmp/index2.html | awk -F 'href="' '{print $2}' | awk -F '">kernel-debug-core-' '{print $1}' ); do
-                FULL_NAME="${VERSION}/BaseOS/${ARCH}/os/Packages/k/${KERN}"
-                KERN_VAR=$( echo ${KERN} | awk -F 'kernel-debug-core-' '{print $2}' | awk -F '.rpm' '{print $1}' )
-                _handle_rpm ${KERN_VAR} ${FULL_NAME}
+    for DL_SITE in ${DOWNLOAD_SITE} https://dl.rockylinux.org/vault/rocky/ ; do
+        for VERSION in $( grep ' -' ${TEMP_DIR}/index.html | awk -F 'href="' '{print $2}' | awk -F '/">' '{print $1}' | sed -e 's/ /-/g' | tr '\n' ' ' ); do
+            for ARCH in $( wget ${DL_SITE}/${VERSION}/BaseOS -O - | grep ' -' | grep -v 'source' | awk -F 'href="' '{print $2}' | awk -F '/">' '{print $1}' | tr '\n' ' ' ); do
+                # https://download.rockylinux.org/pub/rocky/9.1/BaseOS/ppc64le/os/Packages/k
+                PKG_URL='Packages/k'
+                if [ ! $( wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/${PKG_URL} -O ${TEMP_DIR}/index2.html ) ]; then
+                    PKG_URL='Packages'
+                    wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/${PKG_URL} -O ${TEMP_DIR}/index2.html
+                fi
+                if [[ -z $( cat /tmp/index2.html ) ]]; then
+                    break
+                fi
+                for KERN in $( grep 'kernel-debug-core-' /tmp/index2.html | awk -F 'href="' '{print $2}' | awk -F '">kernel-debug-core-' '{print $1}' ); do
+                    FULL_NAME="${VERSION}/BaseOS/${ARCH}/os/${PKG_URL}/${KERN}"
+                    KERN_VAR=$( echo ${KERN} | awk -F 'kernel-debug-core-' '{print $2}' | awk -F '.rpm' '{print $1}' )
+                    DOWNLOAD_SITE=${DL_SITE}
+                    _handle_rpm ${KERN_VAR} ${FULL_NAME}
+                done
             done
         done
     done
