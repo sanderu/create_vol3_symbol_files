@@ -69,7 +69,7 @@ _distrocheck() {
             DISTRO='ubuntu'
             ;;
         fedora)
-            DOWNLOAD_SITE='https://copr.fedorainfracloud.org/coprs/g/kernel-vanilla/fedora/'
+            DOWNLOAD_SITE='https://download.copr.fedorainfracloud.org/results/@kernel-vanilla/fedora/'
             DISTRO='fedora'
             ;;
         rocky)
