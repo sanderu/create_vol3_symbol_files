@@ -46,7 +46,17 @@ _handle_rpm() {
         exit 1
     fi
 
-    # Create banner.txt file - NOPE! not for Rocky Linux - constant_data not present in json file
+    # Create banner.txt file
+    HAS_VMLINUZ=$( find ${TEMP_DIR}/temp_kernel/ -type f -name vmlinuz )
+    if [ ! -z ${HAS_VMLINUZ} ]; then
+        if [[ $( file ${HAS_VMLINUZ} | grep -i 'gzip') ]]; then
+            zcat ${HAS_VMLINUZ} | strings | grep -i 'Linux version' > ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/banner.txt
+        elif [[ $( file ${HAS_VMLINUZ} | grep -i 'mockbuild' | grep -i 'gcc' ) ]]; then
+            strings ${HAS_VMLINUZ} | grep -i 'mockbuild' | grep -i 'gcc' > ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/banner.txt
+        else
+            strings ${HAS_VMLINUZ} | grep -i 'mockbuild' > ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/banner.txt
+        fi
+    fi
     xz ${TEMP_DIR}/${KERN_VAR}.json
     mv ${TEMP_DIR}/${KERN_VAR}.json.xz ${SYMBOL_DIR}/${DISTRO}/${KERN_VAR}/${KERN_VAR}.json.xz
     rm ${TEMP_DIR}/${PKG_NAME}
@@ -85,15 +95,13 @@ _all_kernels() {
         for VERSION in $( grep ' -' ${TEMP_DIR}/index.html | awk -F 'href="' '{print $2}' | awk -F '/">' '{print $1}' | sed -e 's/ /-/g' | tr '\n' ' ' ); do
             for ARCH in $( wget ${DL_SITE}/${VERSION}/BaseOS -O - | grep ' -' | grep -v 'source' | awk -F 'href="' '{print $2}' | awk -F '/">' '{print $1}' | tr '\n' ' ' ); do
                 # https://download.rockylinux.org/pub/rocky/9.1/BaseOS/ppc64le/os/Packages/k
-                PKG_URL='Packages/k'
-                if [ ! $( wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/${PKG_URL} -O ${TEMP_DIR}/index2.html ) ]; then
-                    PKG_URL='Packages'
+                PKG_URL='Packages'
+                wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/${PKG_URL} -O ${TEMP_DIR}/index2.html
+                if [[ $( grep ' href="k/"' ${TEMP_DIR}/index2.html ) ]]; then
+                    PKG_URL='Packages/k'
                     wget ${DL_SITE}/${VERSION}/BaseOS/${ARCH}/os/${PKG_URL} -O ${TEMP_DIR}/index2.html
                 fi
-                if [[ -z $( cat /tmp/index2.html ) ]]; then
-                    break
-                fi
-                for KERN in $( grep 'kernel-debug-core-' /tmp/index2.html | awk -F 'href="' '{print $2}' | awk -F '">kernel-debug-core-' '{print $1}' ); do
+                for KERN in $( grep 'kernel-debug-core-' ${TEMP_DIR}/index2.html | awk -F 'href="' '{print $2}' | awk -F '">kernel-debug-core-' '{print $1}' ); do
                     FULL_NAME="${VERSION}/BaseOS/${ARCH}/os/${PKG_URL}/${KERN}"
                     KERN_VAR=$( echo ${KERN} | awk -F 'kernel-debug-core-' '{print $2}' | awk -F '.rpm' '{print $1}' )
                     DOWNLOAD_SITE=${DL_SITE}
