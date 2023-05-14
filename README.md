@@ -9,6 +9,7 @@ Distros supported:
 * debian
 * ubuntu
 * fedora
+* rocky
 
 Choose to create Volatility3 symbol files for specific kernel or all (-a).
 
